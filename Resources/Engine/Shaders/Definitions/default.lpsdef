@@ -1,0 +1,4 @@
+name: "Default"
+paths:
+  - "Engine/Shaders/GLSL/Default/Default_vs.glsl"
+  - "Engine/Shaders/GLSL/Default/Default_fs.glsl"

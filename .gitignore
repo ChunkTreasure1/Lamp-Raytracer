@@ -1,0 +1,14 @@
+.vs/
+.vscode/
+bin/
+bin-int/
+scripts/data/__pycache__
+scripts/data/premake5.exe
+scripts/VulkanSDK.exe
+Resources/User
+Resources/Engine/Shaders/Cache
+
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user

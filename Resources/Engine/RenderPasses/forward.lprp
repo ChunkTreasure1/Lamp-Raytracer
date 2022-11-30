@@ -1,0 +1,38 @@
+RenderPass:
+  name: forward
+  drawType: Opaque
+  priority: 2
+  resizeable: true
+  excludedPipelines:
+    - name: "gbuffer"
+  framebuffer:
+    width: 1280
+    height: 720
+    existingImages:
+      - renderPass: shadingPass
+        attachmentIndex: 0
+        targetIndex: 0
+        depth: false
+      - renderPass: gbuffer
+        attachmentIndex: 0
+        targetIndex: 0
+        depth: true
+    attachments:
+      - format: RGBA
+        filter: Linear
+        wrapMode: Repeat
+        blendMode: None
+        clearMode: Clear
+        borderColor: [1, 1, 1, 1]
+        clearColor: [0.100000001, 0.100000001, 0.100000001, 1]
+        debugName: ""
+        copyable: true
+      - format: DEPTH32F
+        filter: Linear
+        wrapMode: Repeat
+        blendMode: None
+        clearMode: Clear
+        borderColor: [1, 1, 1, 1]
+        clearColor: [1, 1, 1, 1]
+        debugName: ""
+        copyable: false

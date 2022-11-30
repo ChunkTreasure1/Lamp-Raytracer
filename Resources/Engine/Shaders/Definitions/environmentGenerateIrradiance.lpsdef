@@ -1,0 +1,3 @@
+name: "EnvironmentGenerateIrradiance"
+paths:
+  - "Engine/Shaders/GLSL/Environment/EnvironmentGenerateIrradiance_cs.glsl"

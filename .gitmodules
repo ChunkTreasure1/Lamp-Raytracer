@@ -1,0 +1,9 @@
+[submodule "Lamp-Raytracer/vendor/GLFW"]
+	path = Lamp-Raytracer/vendor/GLFW
+	url = https://github.com/TheCherno/glfw
+[submodule "Lamp-Raytracer/vendor/spdlog"]
+	path = Lamp-Raytracer/vendor/spdlog
+	url = https://github.com/gabime/spdlog
+[submodule "Lamp-Raytracer/vendor/imgui"]
+	path = Lamp-Raytracer/vendor/imgui
+	url = https://github.com/ChunkTreasure1/imgui
