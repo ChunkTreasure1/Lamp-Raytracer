@@ -16,6 +16,8 @@ namespace Lamp
 		void Invalidate(const void* data = nullptr);
 		void Release();
 
+		void SetData(const void* data, uint32_t size);
+
 		void TransitionToLayout(VkCommandBuffer commandBuffer, VkImageLayout targetLayout);
 		void GenerateMips(bool readOnly, VkCommandBuffer commandBuffer = nullptr);
 		VkImageView CreateMipView(uint32_t mip);
@@ -35,6 +37,8 @@ namespace Lamp
 		static Ref<Image2D> Create(const ImageSpecification& specification, const void* data = nullptr);
 
 	private:
+		void CreateStagingBuffer();
+
 		friend class RenderPipelineCompute;
 		friend class ImageBarrier;
 
@@ -42,6 +46,9 @@ namespace Lamp
 
 		VmaAllocation m_bufferAllocation = nullptr;
 		VkImage m_image = nullptr;
+
+		VmaAllocation m_stagingAllocation = nullptr;
+		VkBuffer m_stagingBuffer = nullptr;
 
 		VkFormat m_format = VK_FORMAT_R8G8B8A8_UNORM;
 		VkImageLayout m_imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;

@@ -44,16 +44,15 @@ namespace Lamp
 
 	Application::~Application()
 	{
-		Renderer::Shutdowm();
-
-		Log::Shutdown();
 		vkDeviceWaitIdle(GraphicsContext::GetDevice()->GetHandle());
+		Log::Shutdown();
 
 		OPTICK_SHUTDOWN();
 
 		m_layerStack.Clear();
 		m_imguiImplementation = nullptr;
 
+		Renderer::Shutdowm();
 		m_window = nullptr;
 		s_instance = nullptr;
 	}
@@ -91,8 +90,6 @@ namespace Lamp
 			{
 				LP_PROFILE_SCOPE("Application::ImGui")
 				m_imguiImplementation->Begin();
-
-				ImGui::ShowDemoWindow();
 
 				AppImGuiUpdateEvent imguiEvent{};
 				OnEvent(imguiEvent);

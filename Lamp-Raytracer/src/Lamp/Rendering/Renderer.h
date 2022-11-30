@@ -21,6 +21,8 @@ namespace Lamp
 		static void Begin();
 		static void End();
 
+		static void FlushResources(bool flushAll = false);
+
 		static void SubmitResourceFree(std::function<void()>&& function);
 		static void SubmitInvalidation(std::function<void()>&& function);
 

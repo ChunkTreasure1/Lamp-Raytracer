@@ -46,10 +46,7 @@ namespace Lamp
 
 		s_rendererData = nullptr;
 
-		for (auto& s_frameDeletionQueue : s_frameDeletionQueues)
-		{
-			s_frameDeletionQueue.Flush();
-		}
+		FlushResources(true);
 
 		SamplerLibrary::Shutdown();
 	}
@@ -65,8 +62,7 @@ namespace Lamp
 
 		LP_PROFILE_GPU_EVENT("Rendering Begin");
 
-		s_frameDeletionQueues[currentFrame].Flush();
-		s_invalidationQueues[currentFrame].Flush();
+		FlushResources();
 	}
 
 	void Renderer::End()
@@ -74,6 +70,26 @@ namespace Lamp
 		LP_PROFILE_FUNCTION();
 		LP_PROFILE_GPU_EVENT("Rendering Begin");
 		s_rendererData->commandBuffer->End();
+	}
+
+	void Renderer::FlushResources(bool flushAll)
+	{
+		if (!flushAll) [[likely]]
+		{
+			const uint32_t currentFrame = Application::Get().GetWindow()->GetSwapchain().GetCurrentFrame();
+			s_frameDeletionQueues[currentFrame].Flush();
+			s_invalidationQueues[currentFrame].Flush();
+		}
+		else
+		{
+			const uint32_t framesInFlight = Application::Get().GetWindow()->GetSwapchain().GetFramesInFlight();
+
+			for (uint32_t i = 0; i < framesInFlight; i++)
+			{
+				s_invalidationQueues[i].Flush();
+				s_frameDeletionQueues[i].Flush();
+			}
+		}
 	}
 
 	void Renderer::SubmitResourceFree(std::function<void()>&& function)

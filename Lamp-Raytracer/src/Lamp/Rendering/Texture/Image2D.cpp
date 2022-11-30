@@ -101,30 +101,23 @@ namespace Lamp
 		{
 			auto device = GraphicsContext::GetDevice();
 
-			VkBuffer stagingBuffer;
-			VmaAllocation stagingBufferAllocation;
-
-			VkDeviceSize bufferSize = m_specification.width * m_specification.height * Utility::PerPixelSizeFromFormat(m_specification.format);
-
-			// Staging buffer
+			if (!m_stagingBuffer)
 			{
-				VkBufferCreateInfo bufferInfo{};
-				bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-				bufferInfo.size = bufferSize;
-				bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-				bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+				CreateStagingBuffer();
+			}
 
-				stagingBufferAllocation = allocator.AllocateBuffer(bufferInfo, VMA_MEMORY_USAGE_CPU_ONLY, stagingBuffer);
+			{
+				const VkDeviceSize bufferSize = m_specification.width * m_specification.height * Utility::PerPixelSizeFromFormat(m_specification.format);
 
-				auto* mappedData = allocator.MapMemory<void>(stagingBufferAllocation);
+				auto* mappedData = allocator.MapMemory<void>(m_stagingAllocation);
 				memcpy_s(mappedData, bufferSize, data, bufferSize);
-				allocator.UnmapMemory(stagingBufferAllocation);
+				allocator.UnmapMemory(m_stagingAllocation);
 
 				Utility::TransitionImageLayout(m_image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-				Utility::CopyBufferToImage(stagingBuffer, m_image, m_specification.width, m_specification.height);
+				Utility::CopyBufferToImage(m_stagingBuffer, m_image, m_specification.width, m_specification.height);
 				Utility::TransitionImageLayout(m_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-				allocator.DestroyBuffer(stagingBuffer, stagingBufferAllocation);
+				allocator.DestroyBuffer(m_stagingBuffer, m_stagingAllocation);
 			}
 		}
 
@@ -162,12 +155,12 @@ namespace Lamp
 
 	void Image2D::Release()
 	{
-		if (!m_image && !m_bufferAllocation)
+		if (!m_image && !m_bufferAllocation && !m_stagingAllocation)
 		{
 			return;
 		}
 
-		Renderer::SubmitResourceFree([imageViews = m_imageViews, image = m_image, bufferAllocation = m_bufferAllocation]()
+		Renderer::SubmitResourceFree([imageViews = m_imageViews, image = m_image, bufferAllocation = m_bufferAllocation, stagingBuffer = m_stagingBuffer, stagingAllocation = m_stagingAllocation]()
 			{
 				auto device = GraphicsContext::GetDevice();
 
@@ -178,11 +171,34 @@ namespace Lamp
 
 				VulkanAllocator allocator{ "Image2D - Destroy" };
 				allocator.DestroyImage(image, bufferAllocation);
+				allocator.DestroyBuffer(stagingBuffer, stagingAllocation);
 			});
 
 		m_imageViews.clear();
 		m_image = nullptr;
 		m_bufferAllocation = nullptr;
+	}
+
+	void Image2D::SetData(const void* data, uint32_t size)
+	{
+		auto device = GraphicsContext::GetDevice();
+		VulkanAllocator allocator{ "Image2D - SetData" };
+
+		const VkDeviceSize bufferSize = m_specification.width * m_specification.height * Utility::PerPixelSizeFromFormat(m_specification.format);
+		if (!m_stagingBuffer)
+		{
+			CreateStagingBuffer();
+		}
+
+		auto* mappedData = allocator.MapMemory<void>(m_stagingAllocation);
+		memcpy_s(mappedData, bufferSize, data, bufferSize);
+		allocator.UnmapMemory(m_stagingAllocation);
+
+		Utility::TransitionImageLayout(m_image, m_imageLayout, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+		Utility::CopyBufferToImage(m_stagingBuffer, m_image, m_specification.width, m_specification.height);
+		Utility::TransitionImageLayout(m_image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+		m_imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 	}
 
 	void Image2D::TransitionToLayout(VkCommandBuffer commandBuffer, VkImageLayout targetLayout)
@@ -352,5 +368,19 @@ namespace Lamp
 	Ref<Image2D> Image2D::Create(const ImageSpecification& specification, const void* data)
 	{
 		return CreateRef<Image2D>(specification, data);
+	}
+
+	void Image2D::CreateStagingBuffer()
+	{
+		VulkanAllocator allocator{ "Image2D - Staging Buffer Create" };
+
+		VkDeviceSize bufferSize = m_specification.width * m_specification.height * Utility::PerPixelSizeFromFormat(m_specification.format);
+		VkBufferCreateInfo bufferInfo{};
+		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		bufferInfo.size = bufferSize;
+		bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+		bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+		m_stagingAllocation = allocator.AllocateBuffer(bufferInfo, VMA_MEMORY_USAGE_CPU_ONLY, m_stagingBuffer);
 	}
 }
