@@ -18,6 +18,8 @@ private:
 Lamp::Application* Lamp::CreateApplication()
 {
 	Lamp::ApplicationInfo info{};
+	info.width = 1600;
+	info.height = 900;
 
 	return new LauncherApp(info);
 }

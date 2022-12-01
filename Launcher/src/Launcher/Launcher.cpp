@@ -1,8 +1,15 @@
 #include "Launcher.h"
 
+#include "Launcher/Objects/Sphere.h"
+
 #include <Lamp/Core/Base.h>
-#include <Lamp/Rendering/Texture/Image2D.h>
 #include <Lamp/Utility/UIUtility.h>
+
+#include <Lamp/Rendering/Texture/Image2D.h>
+#include <Lamp/Rendering/Renderer.h>
+#include <Lamp/Rendering/Framebuffer.h>
+
+#include <Lamp/Scene/Scene.h>
 
 #include <imgui.h>
 
@@ -10,35 +17,41 @@ namespace Launcher
 {
 	void LauncherLayer::OnAttach()
 	{
-		Lamp::ImageSpecification spec{};
-		spec.width = 1024;
-		spec.height = 1024;
-		spec.format = Lamp::ImageFormat::RGBA;
-		spec.usage = Lamp::ImageUsage::Texture;
+		Lamp::FramebufferSpecification spec{};
+		spec.attachments =
+		{
+			{ Lamp::ImageFormat::RGBA }
+		};
 
-		m_renderedImage = Lamp::Image2D::Create(spec);
+		spec.width = 1280;
+		spec.height = 720;
+	
+		m_framebuffer = Lamp::Framebuffer::Create(spec);
 
-		m_imageBuffer = new uint8_t[1024 * 1024 * 4];
+		m_scene = CreateRef<Lamp::Scene>();
+
+		m_scene->AddObject(CreateRef<Sphere>(glm::vec3{ 2.f, 0.f, -5.f }, 0.5f));
+		m_scene->AddObject(CreateRef<Sphere>(glm::vec3{ -2.f, 0.f, -5.f }, 0.5f));
+		//m_scene->AddObject(CreateRef<Sphere>(glm::vec3{ 0.f, -100.f, -1.f }, 100.f));
 	}
 
 	void LauncherLayer::OnDetach()
 	{
-		delete[] m_imageBuffer;
-		m_renderedImage = nullptr;
+		m_framebuffer = nullptr;
 	}
 
-	void LauncherLayer::OnEvent(Lamp::Event & e)
+	void LauncherLayer::OnEvent(Lamp::Event& e)
 	{
 		Lamp::EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<Lamp::AppImGuiUpdateEvent>(LP_BIND_EVENT_FN(LauncherLayer::OnImGuiUpdate));
 		dispatcher.Dispatch<Lamp::AppRenderEvent>(LP_BIND_EVENT_FN(LauncherLayer::OnRender));
 	}
 
-	bool LauncherLayer::OnImGuiUpdate(Lamp::AppImGuiUpdateEvent & e)
+	bool LauncherLayer::OnImGuiUpdate(Lamp::AppImGuiUpdateEvent& e)
 	{
 		ImGui::Begin("TestWindow");
 
-		ImGui::Image(UI::GetTextureID(m_renderedImage), { 512, 512 });
+		ImGui::Image(UI::GetTextureID(m_framebuffer->GetColorAttachment(0)), { 1280, 720 });
 
 		ImGui::End();
 
@@ -47,10 +60,12 @@ namespace Launcher
 
 	bool LauncherLayer::OnRender(Lamp::AppRenderEvent& e)
 	{
-		constexpr size_t size = 1024 * 1024 * 4;
+		m_scene->OnRender();
 
-		memset(m_imageBuffer, 1, size);
-		m_renderedImage->SetData(m_imageBuffer, (uint32_t)size);
+		Lamp::Renderer::Begin(m_framebuffer);
+		Lamp::Renderer::Render();
+		Lamp::Renderer::End();
+
 		return false;
 	}
 }

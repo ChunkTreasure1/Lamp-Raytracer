@@ -34,6 +34,10 @@ namespace Lamp
 		inline const float GetNearPlane() const { return m_nearPlane; }
 		inline const float GetFarPlane() const { return m_farPlane; }
 
+		void GenerateRayDirections(uint32_t width, uint32_t height);
+		const glm::vec3& GetRayDirectionAt(uint32_t index);
+		const glm::vec3 ScreenToWorldRay(const glm::vec2& someCoords, const glm::vec2& aSize);
+
 		glm::vec3 GetUp() const;
 		glm::vec3 GetRight() const;
 		glm::vec3 GetForward() const;
@@ -42,6 +46,8 @@ namespace Lamp
 
 	private:
 		void RecalculateViewMatrix();
+
+		std::vector<glm::vec3> m_rayDirections;
 
 		glm::vec3 m_position = { 0.f, 0.f, 0.f };
 		glm::vec3 m_rotation = { 0.f, 0.f, 0.f };

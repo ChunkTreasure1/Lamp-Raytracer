@@ -155,7 +155,7 @@ namespace Lamp
 
 	void Image2D::Release()
 	{
-		if (!m_image && !m_bufferAllocation && !m_stagingAllocation)
+		if (!m_image && !m_bufferAllocation)
 		{
 			return;
 		}
@@ -171,7 +171,11 @@ namespace Lamp
 
 				VulkanAllocator allocator{ "Image2D - Destroy" };
 				allocator.DestroyImage(image, bufferAllocation);
-				allocator.DestroyBuffer(stagingBuffer, stagingAllocation);
+
+				if (stagingBuffer)
+				{
+					allocator.DestroyBuffer(stagingBuffer, stagingAllocation);
+				}
 			});
 
 		m_imageViews.clear();

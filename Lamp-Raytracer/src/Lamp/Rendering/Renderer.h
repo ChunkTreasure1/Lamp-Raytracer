@@ -11,6 +11,8 @@ namespace Lamp
 {
 	class Camera;
 	class CommandBuffer;
+	class Framebuffer;
+	class Hittable;
 
 	class Renderer
 	{
@@ -18,8 +20,11 @@ namespace Lamp
 		static void Initialize();
 		static void Shutdowm();
 
-		static void Begin();
+		static void Begin(Ref<Framebuffer> framebuffer);
 		static void End();
+
+		static void Submit(Ref<Hittable> object);
+		static void Render();
 
 		static void FlushResources(bool flushAll = false);
 
@@ -32,14 +37,18 @@ namespace Lamp
 		Renderer() = delete;
 		
 		static void CreateSamplers();
-
 		static void CreateDescriptorPools();
 
 		struct RendererData
 		{
 			Ref<CommandBuffer> commandBuffer;
-			Ref<Camera> passCamera;
+			Ref<Framebuffer> currentFramebuffer;
+
+			Ref<Camera> camera;
 			std::vector<VkDescriptorPool> descriptorPools;
+
+			uint32_t* imageBuffer = nullptr;
+			std::vector<Ref<Hittable>> renderCommands;
 		};
 
 		inline static Scope<RendererData> s_rendererData;

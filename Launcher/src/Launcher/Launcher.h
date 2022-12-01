@@ -5,7 +5,8 @@
 
 namespace Lamp
 {
-	class Image2D;
+	class Scene;
+	class Framebuffer;
 }
 
 namespace Launcher
@@ -22,7 +23,7 @@ namespace Launcher
 		bool OnImGuiUpdate(Lamp::AppImGuiUpdateEvent& e);
 		bool OnRender(Lamp::AppRenderEvent& e);
 
-		Ref<Lamp::Image2D> m_renderedImage;
-		uint8_t* m_imageBuffer = nullptr;
+		Ref<Lamp::Framebuffer> m_framebuffer;
+		Ref<Lamp::Scene> m_scene;
 	};
 }
